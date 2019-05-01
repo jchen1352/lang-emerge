@@ -30,6 +30,8 @@ def read():
                             help='Turn on/off for ABot with memory');
     parser.add_argument('-negFraction', default=0.8, type=float,\
                             help='Fraction of negative examples in batch');
+    parser.add_argument('-overhear', dest='overhear', action='store_true',\
+                            help='Turn on/off for teams to overhear each other');
 
     # Optimization options
     parser.add_argument('-batchSize', default=1000, type=int,\

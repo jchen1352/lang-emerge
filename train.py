@@ -25,6 +25,7 @@ numInst = data.getInstCount();
 params = data.params;
 # append options from options to params
 for key, value in options.iteritems(): params[key] = value;
+print(options['overhear'])
 
 #------------------------------------------------------------------------
 # build agents, and setup optmizer
@@ -46,9 +47,9 @@ optimizer = optim.Adam([{'params': team.aBot1.parameters(), \
 numIterPerEpoch = int(np.ceil(numInst['train']/params['batchSize']));
 numIterPerEpoch = max(1, numIterPerEpoch);
 count = 0;
-savePath = 'models/tasks_inter_jeff_%dH_%.4flr_%r_%d_%d.pickle' %\
+savePath = 'models/tasks_inter_jeff_%dH_%.4flr_%r_%d_%d_%r.pickle' %\
             (params['hiddenSize'], params['learningRate'], params['remember'],\
-            options['aOutVocab'], options['qOutVocab']);
+            options['aOutVocab'], options['qOutVocab'], options['overhear']);
 
 matches1 = {};
 accuracy1 = {};

@@ -270,10 +270,11 @@ class Team:
             self.qBot2.listen(aBot2Reply);
             # overhear the aBot reply from the other team
             # only if not task
-            if (aBot1Reply < self.qBot1.taskOffset).data.all() and \
+            if self.overhear and \
+                    (aBot1Reply < self.qBot1.taskOffset).data.all() and \
                     (aBot2Reply < self.qBot2.taskOffset).data.all():
-                self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply)
-                self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply)
+                self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
+                self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
             qBot1Ques = self.qBot1.speak();
             qBot2Ques = self.qBot2.speak();
 
@@ -292,8 +293,11 @@ class Team:
             self.aBot1.listen(qBot1Ques, imgEmbed1);
             self.aBot2.listen(qBot2Ques, imgEmbed2);
             # overhear question from other team
-            self.aBot1.listen(self.aBot1.overhearOffset + qBot2Ques, imgEmbed1)
-            self.aBot2.listen(self.aBot2.overhearOffset + qBot2Ques, imgEmbed2)
+            if self.overhear:
+                self.aBot1.listen(self.aBot1.overhearOffset + qBot2Ques,
+                    imgEmbed1);
+                self.aBot2.listen(self.aBot2.overhearOffset + qBot2Ques,
+                    imgEmbed2);
             aBot1Reply = self.aBot1.speak();
             aBot1Reply = aBot1Reply.detach();
             aBot2Reply = self.aBot2.speak();
@@ -309,8 +313,9 @@ class Team:
         self.qBot1.listen(aBot1Reply);
         self.qBot2.listen(aBot2Reply);
         # overhear last answer from other team
-        self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply)
-        self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply)
+        if self.overhear:
+            self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
+            self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
 
         # predict the image attributes, compute reward
         self.guessToken1, self.guessDistr1 = self.qBot1.predict(tasks1, 2);
