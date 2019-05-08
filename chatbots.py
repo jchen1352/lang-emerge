@@ -126,7 +126,8 @@ class Answerer(ChatBot):
 
         # set offset
         self.listenOffset = params['qOutVocab'];
-        self.overhearOffset = self.listenOffset + params['qOutVocab']
+        self.overhearOffset = self.listenOffset + params['qOutVocab'];
+        self.noneToken = params['inVocabSize'] - 1;
 
     # Embedding the image
     def embedImage(self, batch):
@@ -162,7 +163,8 @@ class Questioner(ChatBot):
         # setting offset
         self.taskOffset = params['aOutVocab'] + params['qOutVocab'];
         self.listenOffset = params['aOutVocab'];
-        self.overhearOffset = self.taskOffset + params['aOutVocab']
+        self.overhearOffset = self.taskOffset + params['aOutVocab'];
+        self.noneToken = params['inVocabSize'] - 1;
 
     # make a guess the given image
     def guessAttribute(self, inputEmbeds):
@@ -246,7 +248,7 @@ class Team:
         self.aBot2.evaluate(); self.qBot2.evaluate();
 
     # forward pass
-    def forward(self, batch1, tasks1, batch2, tasks2, record=False):
+    def forward(self, batch1, tasks1, batch2, tasks2, record=False, overhear=False):
         # reset the states of the bots
         batchSize = batch1.size(0);
         self.qBot1.resetStates(batchSize);
@@ -270,11 +272,16 @@ class Team:
             self.qBot2.listen(aBot2Reply);
             # overhear the aBot reply from the other team
             # only if not task
-            if self.overhear and \
+            if overhear and \
                     (aBot1Reply < self.qBot1.taskOffset).data.all() and \
                     (aBot2Reply < self.qBot2.taskOffset).data.all():
                 self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
                 self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
+            else:
+                self.qBot1.listen(torch.tensor(self.qBot1.noneToken).repeat(
+                    aBot2Reply.data.shape));
+                self.qBot2.listen(torch.tensor(self.qBot2.noneToken).repeat(
+                    aBot1Reply.data.shape));
             qBot1Ques = self.qBot1.speak();
             qBot2Ques = self.qBot2.speak();
 
@@ -293,11 +300,14 @@ class Team:
             self.aBot1.listen(qBot1Ques, imgEmbed1);
             self.aBot2.listen(qBot2Ques, imgEmbed2);
             # overhear question from other team
-            if self.overhear:
-                self.aBot1.listen(self.aBot1.overhearOffset + qBot2Ques,
-                    imgEmbed1);
-                self.aBot2.listen(self.aBot2.overhearOffset + qBot2Ques,
-                    imgEmbed2);
+            if overhear:
+                self.aBot1.listen(self.aBot1.overhearOffset + qBot2Ques, imgEmbed1);
+                self.aBot2.listen(self.aBot2.overhearOffset + qBot1Ques, imgEmbed2);
+            else:
+                self.aBot1.listen(torch.tensor(self.aBot1.noneToken).repeat(
+                    qBot2Ques.data.shape), imgEmbed1);
+                self.aBot2.listen(torch.tensor(self.aBot2.noneToken).repeat(
+                    qBot1Ques.data.shape), imgEmbed2);
             aBot1Reply = self.aBot1.speak();
             aBot1Reply = aBot1Reply.detach();
             aBot2Reply = self.aBot2.speak();
@@ -313,9 +323,14 @@ class Team:
         self.qBot1.listen(aBot1Reply);
         self.qBot2.listen(aBot2Reply);
         # overhear last answer from other team
-        if self.overhear:
+        if overhear:
             self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
             self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
+        else:
+            self.qBot1.listen(torch.tensor(self.qBot1.noneToken).repeat(
+                aBot2Reply.data.shape));
+            self.qBot2.listen(torch.tensor(self.qBot2.noneToken).repeat(
+                aBot1Reply.data.shape));
 
         # predict the image attributes, compute reward
         self.guessToken1, self.guessDistr1 = self.qBot1.predict(tasks1, 2);
@@ -333,20 +348,24 @@ class Team:
         # both attributes need to match
         firstMatch1 = self.guessToken1[0].data == gtLabels1[:, 0:1];
         secondMatch1 = self.guessToken1[1].data == gtLabels1[:, 1:2];
-        match1 = firstMatch1 & secondMatch1
+        match1 = firstMatch1 & secondMatch1;
         firstMatch2 = self.guessToken2[0].data == gtLabels2[:, 0:1];
         secondMatch2 = self.guessToken2[1].data == gtLabels2[:, 1:2];
-        match2 = firstMatch2 & secondMatch2
-        # assign reward according to matrix (1 is rlScale):
+        match2 = firstMatch2 & secondMatch2;
+        # if overhear, assign reward according to matrix (1 is rlScale):
         #                  | team 2 correct | team 2 incorrect
         # team 1 correct   | (1,1)          | (10,-100)
         # team 1 incorrect | (-100,10)      | (-10,-10)
-        self.reward1[match1 & match2] = self.rlScale;
-        self.reward1[match1 & ~match2] = 10 * self.rlScale;
-        self.reward1[~match1 & match2] = 10 * self.rlNegReward;
-        self.reward2[match1 & match2] = self.rlScale;
-        self.reward2[~match1 & match2] = 10 * self.rlScale;
-        self.reward2[match1 & ~match2] = 10 * self.rlNegReward;
+        if self.overhear:
+            self.reward1[match1 & match2] = self.rlScale;
+            self.reward1[match1 & ~match2] = 10 * self.rlScale;
+            self.reward1[~match1 & match2] = 10 * self.rlNegReward;
+            self.reward2[match1 & match2] = self.rlScale;
+            self.reward2[~match1 & match2] = 10 * self.rlScale;
+            self.reward2[match1 & ~match2] = 10 * self.rlNegReward;
+        else:
+            self.reward1[match1] = self.rlScale;
+            self.reward2[match2] = self.rlScale;
 
         # reinforce all actions for qBot, aBot
         self.qBot1.reinforce(self.reward1);

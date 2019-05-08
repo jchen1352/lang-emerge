@@ -25,7 +25,6 @@ numInst = data.getInstCount();
 params = data.params;
 # append options from options to params
 for key, value in options.iteritems(): params[key] = value;
-print(options['overhear'])
 
 #------------------------------------------------------------------------
 # build agents, and setup optmizer
@@ -79,8 +78,10 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
                                                         params['negFraction']);
 
     # forward pass
+    # overhear every other round
+    overhear = options['overhear'] and (iterId % 2 == 1);
     team.forward(Variable(batchImg1), Variable(batchTask1), Variable(batchImg2),\
-        Variable(batchTask2));
+        Variable(batchTask2), overhear=overhear);
     # backward pass
     team.backward(optimizer, batchLabels1, batchLabels2, epoch);
 
