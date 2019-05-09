@@ -37,6 +37,7 @@ data = Dataloader(params);
 team = Team(params);
 team.loadModel(loaded);
 team.evaluate();
+team.setOverhear(False);
 #------------------------------------------------------------------------
 # test agents
 #------------------------------------------------------------------------

@@ -94,9 +94,8 @@ class ChatBot(nn.Module):
 
     # backward computation
     def performBackward(self):
-        autograd.backward(self.actionLosses,
-            [torch.ones(a.data.shape) for a in self.actionLosses],
-            retain_graph=True);
+        tmp =[a.clone().fill_(1.0) for a in self.actionLosses];
+        autograd.backward(self.actionLosses, tmp, retain_graph=True);
 
     # switch mode to evaluate
     def evaluate(self): self.evalFlag = True;
@@ -229,8 +228,8 @@ class Team:
             self.qBot1 = self.qBot1.cuda();
             self.aBot2 = self.aBot2.cuda();
             self.qBot2 = self.qBot2.cuda();
-            self.reward1 = self.reward.cuda();
-            self.reward2 = self.reward.cuda();
+            self.reward1 = self.reward1.cuda();
+            self.reward2 = self.reward2.cuda();
 
         print(self.aBot1)
         print(self.qBot1)
@@ -247,8 +246,11 @@ class Team:
         self.aBot1.evaluate(); self.qBot1.evaluate();
         self.aBot2.evaluate(); self.qBot2.evaluate();
 
+    def setOverhear(self, overhear):
+        self.overhear = overhear;
+
     # forward pass
-    def forward(self, batch1, tasks1, batch2, tasks2, record=False, overhear=False):
+    def forward(self, batch1, tasks1, batch2, tasks2, record=False):
         # reset the states of the bots
         batchSize = batch1.size(0);
         self.qBot1.resetStates(batchSize);
@@ -272,16 +274,14 @@ class Team:
             self.qBot2.listen(aBot2Reply);
             # overhear the aBot reply from the other team
             # only if not task
-            if overhear and \
+            if self.overhear and \
                     (aBot1Reply < self.qBot1.taskOffset).data.all() and \
                     (aBot2Reply < self.qBot2.taskOffset).data.all():
                 self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
                 self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
             else:
-                self.qBot1.listen(torch.tensor(self.qBot1.noneToken).repeat(
-                    aBot2Reply.data.shape));
-                self.qBot2.listen(torch.tensor(self.qBot2.noneToken).repeat(
-                    aBot1Reply.data.shape));
+                self.qBot1.listen(aBot2Reply.clone().fill_(self.qBot1.noneToken));
+                self.qBot2.listen(aBot1Reply.clone().fill_(self.qBot2.noneToken));
             qBot1Ques = self.qBot1.speak();
             qBot2Ques = self.qBot2.speak();
 
@@ -300,14 +300,14 @@ class Team:
             self.aBot1.listen(qBot1Ques, imgEmbed1);
             self.aBot2.listen(qBot2Ques, imgEmbed2);
             # overhear question from other team
-            if overhear:
+            if self.overhear:
                 self.aBot1.listen(self.aBot1.overhearOffset + qBot2Ques, imgEmbed1);
                 self.aBot2.listen(self.aBot2.overhearOffset + qBot1Ques, imgEmbed2);
             else:
-                self.aBot1.listen(torch.tensor(self.aBot1.noneToken).repeat(
-                    qBot2Ques.data.shape), imgEmbed1);
-                self.aBot2.listen(torch.tensor(self.aBot2.noneToken).repeat(
-                    qBot1Ques.data.shape), imgEmbed2);
+                self.aBot1.listen(qBot2Ques.clone().fill_(self.aBot1.noneToken),
+                    imgEmbed1);
+                self.aBot2.listen(qBot1Ques.clone().fill_(self.aBot2.noneToken),
+                    imgEmbed2);
             aBot1Reply = self.aBot1.speak();
             aBot1Reply = aBot1Reply.detach();
             aBot2Reply = self.aBot2.speak();
@@ -323,14 +323,12 @@ class Team:
         self.qBot1.listen(aBot1Reply);
         self.qBot2.listen(aBot2Reply);
         # overhear last answer from other team
-        if overhear:
+        if self.overhear:
             self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
             self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
         else:
-            self.qBot1.listen(torch.tensor(self.qBot1.noneToken).repeat(
-                aBot2Reply.data.shape));
-            self.qBot2.listen(torch.tensor(self.qBot2.noneToken).repeat(
-                aBot1Reply.data.shape));
+            self.qBot1.listen(aBot2Reply.clone().fill_(self.qBot1.noneToken));
+            self.qBot2.listen(aBot1Reply.clone().fill_(self.qBot2.noneToken));
 
         # predict the image attributes, compute reward
         self.guessToken1, self.guessDistr1 = self.qBot1.predict(tasks1, 2);
