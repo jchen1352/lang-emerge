@@ -206,11 +206,11 @@ class Dataloader:
         for ii in xrange(numImgs):
             # conversation
             conv = {};
-            conv['image'] = [self.invAttrVocab[jj] for jj in images[ii]];
-            conv['gt'] = [self.invAttrVocab[labels[ii, jj]] for jj in xrange(2)];
+            conv['image'] = [self.invAttrVocab[jj.data.item()] for jj in images[ii]];
+            conv['gt'] = [self.invAttrVocab[labels[ii, jj].data.item()] for jj in xrange(2)];
             conv['task'] = [self.attributes[jj] \
                                         for jj in self.taskSelect[tasks[ii]]];
-            conv['pred'] = [self.invAttrVocab[preds[jj].data[ii, 0]] \
+            conv['pred'] = [self.invAttrVocab[preds[jj].data[ii].item()] \
                                                 for jj in xrange(2)];
             conv['chat'] = [qVocab[talk[0].data[ii]], \
                             aVocab[talk[1].data[ii]]]
