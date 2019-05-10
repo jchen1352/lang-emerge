@@ -94,9 +94,11 @@ class ChatBot(nn.Module):
 
     # backward computation
     def performBackward(self):
-        autograd.backward(self.actionLosses,
-            [torch.ones(a.data.shape) for a in self.actionLosses],
-            retain_graph=True);
+        if self.useGPU:
+	    tmp = [torch.ones(a.data.shape).cuda() for a in self.actionLosses];
+        else:
+	    tmp = [torch.ones(a.data.shape) for a in self.actionLosses];
+        autograd.backward(self.actionLosses, tmp, retain_graph=True);
 
     # switch mode to evaluate
     def evaluate(self): self.evalFlag = True;
