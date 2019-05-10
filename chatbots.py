@@ -94,7 +94,10 @@ class ChatBot(nn.Module):
 
     # backward computation
     def performBackward(self):
-        tmp =[a.clone().fill_(1.0) for a in self.actionLosses];
+        if self.useGPU:
+	    tmp = [torch.ones(a.data.shape).cuda() for a in self.actionLosses];
+        else:
+	    tmp = [torch.ones(a.data.shape) for a in self.actionLosses];
         autograd.backward(self.actionLosses, tmp, retain_graph=True);
 
     # switch mode to evaluate
@@ -162,7 +165,7 @@ class Questioner(ChatBot):
         # setting offset
         self.taskOffset = params['aOutVocab'] + params['qOutVocab'];
         self.listenOffset = params['aOutVocab'];
-        self.overhearOffset = self.taskOffset + params['aOutVocab'];
+        self.overhearOffset = self.taskOffset + params['numTasks'];
         self.noneToken = params['inVocabSize'] - 1;
 
     # make a guess the given image
@@ -249,6 +252,9 @@ class Team:
     def setOverhear(self, overhear):
         self.overhear = overhear;
 
+    def setOverhearTask(self, overhearTask):
+        self.overhearTask = overhearTask;
+
     # forward pass
     def forward(self, batch1, tasks1, batch2, tasks2, record=False):
         # reset the states of the bots
@@ -277,6 +283,11 @@ class Team:
             if self.overhear and \
                     (aBot1Reply < self.qBot1.taskOffset).data.all() and \
                     (aBot2Reply < self.qBot2.taskOffset).data.all():
+                self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
+                self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
+            elif self.overhearTask and \
+                    (aBot1Reply >= self.qBot1.taskOffset).data.all() and \
+                    (aBot2Reply >= self.qBot2.taskOffset).data.all():
                 self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
                 self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
             else:

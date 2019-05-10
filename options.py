@@ -32,6 +32,8 @@ def read():
                             help='Fraction of negative examples in batch');
     parser.add_argument('-overhear', dest='overhear', action='store_true',\
                             help='Turn on/off for teams to overhear each other');
+    parser.add_argument('-overhearTask', dest='overhearTask', action='store_true',\
+                            help='Turn on/off for teams to overhear tasks');
 
     # Optimization options
     parser.add_argument('-batchSize', default=1000, type=int,\

@@ -81,6 +81,8 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
     # overhear every other round
     overhear = options['overhear'] and (iterId % 2 == 1);
     team.setOverhear(overhear)
+    overhearTask = options['overhearTask'] and (iterId % 2 == 1);
+    team.setOverhearTask(overhearTask)
     team.forward(Variable(batchImg1), Variable(batchTask1), Variable(batchImg2),\
         Variable(batchTask2));
     # backward pass

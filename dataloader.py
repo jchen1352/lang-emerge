@@ -35,7 +35,7 @@ class Dataloader:
         # Add overhear from other team to the InVocabs
         # plus 1 symbol for no input from other team
         aInVocab += qOutVocab + [' ']
-        qInVocab += aOutVocab + [' ']
+        qInVocab += aOutVocab + taskVocab + [' ']
 
         # pack parameters
         self.params = {'numTasks': self.numTasks, 'taskSelect': self.taskDefn,\
