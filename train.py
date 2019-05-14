@@ -12,7 +12,9 @@ from chatbots import Team
 from dataloader import Dataloader
 import options
 from time import gmtime, strftime
-#import matplotlib.pyplot as plt
+
+# random seed
+torch.manual_seed(0);
 
 # read the command line options
 options = options.read();
@@ -150,15 +152,6 @@ finalSavePath = savePath.replace('inter', replaceWith);
 print('Saving : ' + finalSavePath)
 team.saveModel(finalSavePath, optimizer, params);
 #------------------------------------------------------------------------
-# Plot train and test accuracy over epochs
-#plt.plot(trainAccHistory1);
-#plt.plot(testAccHistory1);
-#plt.plot(trainAccHistory2);
-#plt.plot(testAccHistory2);
-#plt.title('Accuracy vs Epochs');
-#plt.xlabel('Epochs (x100)');
-#plt.ylabel('Accuracy (%)');
-#plt.show();
 historySavePath = finalSavePath.replace('final', 'history')
 with open(historySavePath, 'wb') as f:
     pickle.dump({
