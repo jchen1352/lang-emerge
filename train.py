@@ -14,6 +14,10 @@ import options
 from time import gmtime, strftime
 #import matplotlib.pyplot as plt
 
+# random seed
+torch.manual_seed(0);
+random.seed(0);
+
 # read the command line options
 options = options.read();
 #------------------------------------------------------------------------
