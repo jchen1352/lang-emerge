@@ -15,6 +15,7 @@ from time import gmtime, strftime
 
 # random seed
 torch.manual_seed(0);
+random.seed(0);
 
 # read the command line options
 options = options.read();
@@ -48,9 +49,10 @@ optimizer = optim.Adam([{'params': team.aBot1.parameters(), \
 numIterPerEpoch = int(np.ceil(numInst['train']/params['batchSize']));
 numIterPerEpoch = max(1, numIterPerEpoch);
 count = 0;
-savePath = 'models/tasks_inter_jeff_%dH_%.4flr_%r_%d_%d_%r.pickle' %\
+savePath = 'models/tasks_inter_jeff_%dH_%.4flr_%r_%d_%d_%r_%d_%d_%.2f.pickle' %\
             (params['hiddenSize'], params['learningRate'], params['remember'],\
-            options['aOutVocab'], options['qOutVocab'], options['overhear']);
+            options['aOutVocab'], options['qOutVocab'], options['overhear'],\
+            params['rlPosMult'], params['rlNegMult'], options['overhearFraction']);
 
 matches1 = {};
 accuracy1 = {};
@@ -80,10 +82,10 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
                                                         params['negFraction']);
 
     # forward pass
-    # overhear every other round
-    overhear = options['overhear'] and (iterId % 2 == 1);
+    # overhear according tocriptparam overhearFraction
+    overhear = options['overhear'] and random.random() < options['overhearFraction'];
     team.setOverhear(overhear)
-    overhearTask = options['overhearTask'] and (iterId % 2 == 1);
+    overhearTask = options['overhearTask'] and overhear;
     team.setOverhearTask(overhearTask)
     team.forward(Variable(batchImg1), Variable(batchTask1), Variable(batchImg2),\
         Variable(batchTask2));
@@ -95,8 +97,9 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
     #--------------------------------------------------------------------------
     # switch to evaluate
     team.evaluate();
+    team.setOverhear(False);
 
-    for dtype in ['train', 'test']:
+    for dtype in ['train', 'validation']:
         # get the entire batch
         img, task, labels = data.getCompleteData(dtype);
         # evaluate on the train dataset, using greedy policy
@@ -126,24 +129,24 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
         with open(historySavePath, 'wb') as f:
             pickle.dump({
                     'train1': trainAccHistory1,
-                    'test1': testAccHistory1,
+                    'valid1': testAccHistory1,
                     'train2': trainAccHistory2,
-                    'test2': testAccHistory2
+                    'valid2': testAccHistory2
                 }, f)
 
     if iterId % 100 != 0: continue;
 
     time = strftime("%a, %d %b %Y %X", gmtime());
-    print('[%s][Iter: %d][Ep: %.2f][R1: %.4f][Tr1: %.2f Te1: %.2f]' % \
+    print('[%s][Iter: %d][Ep: %.2f][R1: %.4f][Tr1: %.2f Va1: %.2f]' % \
                                 (time, iterId, epoch, team.totalReward1,\
-                                accuracy1['train'], accuracy1['test']))
-    print('[%s][Iter: %d][Ep: %.2f][R2: %.4f][Tr2: %.2f Te2: %.2f]' % \
+                                accuracy1['train'], accuracy1['validation']))
+    print('[%s][Iter: %d][Ep: %.2f][R2: %.4f][Tr2: %.2f Va2: %.2f]' % \
                                 (time, iterId, epoch, team.totalReward2,\
-                                accuracy2['train'], accuracy2['test']))
+                                accuracy2['train'], accuracy2['validation']))
     trainAccHistory1.append(accuracy1['train']);
-    testAccHistory1.append(accuracy1['test']);
+    testAccHistory1.append(accuracy1['validation']);
     trainAccHistory2.append(accuracy2['train']);
-    testAccHistory2.append(accuracy2['test']);
+    testAccHistory2.append(accuracy2['validation']);
 #------------------------------------------------------------------------
 # save final model with a time stamp
 timeStamp = strftime("%a-%d-%b-%Y-%X", gmtime());
@@ -156,7 +159,7 @@ historySavePath = finalSavePath.replace('final', 'history')
 with open(historySavePath, 'wb') as f:
     pickle.dump({
             'train1': trainAccHistory1,
-            'test1': testAccHistory1,
+            'valid1': testAccHistory1,
             'train2': trainAccHistory2,
-            'test2': testAccHistory2
+            'valid2': testAccHistory2
         }, f)

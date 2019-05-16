@@ -64,7 +64,7 @@ class Dataloader:
 
         # Separate data loading for test/train
         self.data = {};
-        for dtype in ['train', 'test']:
+        for dtype in ['train', 'validation', 'test']:
             data = torch.LongTensor(self.numInst[dtype], self.numAttrs);
             for ii, attrSet in enumerate(self.split[dtype]):
                 data[ii] = torch.LongTensor([self.attrVocab[at] for at in attrSet]);
@@ -84,7 +84,7 @@ class Dataloader:
         for key, value in loaded.iteritems(): setattr(self, key, value);
 
     # create and save the dataset
-    def saveDataset(self, savePath, trainSize=0.8):
+    def saveDataset(self, savePath, trainSize=0.8, validationSize=0.1):
         attributes = ['colors', 'shapes', 'styles'];
         # larger dataset
         #props = {'colors': ['red', 'green', 'blue', 'purple', \
@@ -103,12 +103,18 @@ class Dataloader:
         numImgs = len(dataVerbose);
         numInst = {};
         numInst['train'] = int(trainSize * numImgs);
-        numInst['test'] = numImgs - numInst['train'];
+        numInst['validation'] = int(validationSize * numImgs);
+        numInst['test'] = numImgs - numInst['train'] - numInst['validation'];
 
         # randomly select test
         splitData = {};
-        splitData['test'] = random.sample(dataVerbose, numInst['test']);
-        splitData['train'] = list(set(dataVerbose) - set(splitData['test']));
+        random.shuffle(dataVerbose);
+        splitData['train'] = dataVerbose[:numInst['train']];
+        splitData['validation'] = dataVerbose[numInst['train']:numInst['train'] +
+            numInst['validation']];
+        splitData['test'] = dataVerbose[-numInst['test']:];
+        assert numImgs == \
+            len(splitData['train'] + splitData['test'] + splitData['validation'])
 
         # six tasks, including the order
         taskDefn = [[0, 1], [1, 0], [0, 2], \
@@ -253,4 +259,4 @@ if __name__ == '__main__':
     options = {};
     # create dataloader
     data = Dataloader(options);
-    data.saveDataset('data/toy64_split_0.8.json', 0.8);
+    data.saveDataset('data/toy64_split_0.8-0.1.json', 0.8, 0.1);

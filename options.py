@@ -34,6 +34,12 @@ def read():
                             help='Turn on/off for teams to overhear each other');
     parser.add_argument('-overhearTask', dest='overhearTask', action='store_true',\
                             help='Turn on/off for teams to overhear tasks');
+    parser.add_argument('-rlPosMult', default=10, type=int,\
+                            help='Positive multiplier in reward matrix');
+    parser.add_argument('-rlNegMult', default=10, type=int,\
+                            help='Negative multiplier in reward matrix');
+    parser.add_argument('-overhearFraction', default=0.5, type=float,\
+                            help='Percentage of time to overhear');
 
     # Optimization options
     parser.add_argument('-batchSize', default=1000, type=int,\

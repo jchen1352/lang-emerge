@@ -367,11 +367,11 @@ class Team:
         # team 1 incorrect | (-100,10)      | (-10,-10)
         if self.overhear:
             self.reward1[match1 & match2] = self.rlScale;
-            self.reward1[match1 & ~match2] = 10 * self.rlScale;
-            self.reward1[~match1 & match2] = 10 * self.rlNegReward;
+            self.reward1[match1 & ~match2] = self.rlPosMult * self.rlScale;
+            self.reward1[~match1 & match2] = self.rlNegMult * self.rlNegReward;
             self.reward2[match1 & match2] = self.rlScale;
-            self.reward2[~match1 & match2] = 10 * self.rlScale;
-            self.reward2[match1 & ~match2] = 10 * self.rlNegReward;
+            self.reward2[~match1 & match2] = self.rlPosMult * self.rlScale;
+            self.reward2[match1 & ~match2] = self.rlNegMult * self.rlNegReward;
         else:
             self.reward1[match1] = self.rlScale;
             self.reward2[match2] = self.rlScale;
