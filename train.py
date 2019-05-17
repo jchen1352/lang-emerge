@@ -49,10 +49,11 @@ optimizer = optim.Adam([{'params': team.aBot1.parameters(), \
 numIterPerEpoch = int(np.ceil(numInst['train']/params['batchSize']));
 numIterPerEpoch = max(1, numIterPerEpoch);
 count = 0;
-savePath = 'models/tasks_inter_jeff_%dH_%.4flr_%r_%d_%d_%r_%d_%d_%.2f.pickle' %\
+savePath = 'models/tasks_inter_jeff_%dH_%.4flr_%r_%d_%d_%r_%r_%d_%d_%.2f.pickle' %\
             (params['hiddenSize'], params['learningRate'], params['remember'],\
             options['aOutVocab'], options['qOutVocab'], options['overhear'],\
-            params['rlPosMult'], params['rlNegMult'], options['overhearFraction']);
+            options['overhearTask'], params['rlPosMult'], params['rlNegMult'],\
+            options['overhearFraction']);
 
 matches1 = {};
 accuracy1 = {};
