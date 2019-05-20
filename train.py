@@ -99,6 +99,7 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
     # switch to evaluate
     team.evaluate();
     team.setOverhear(False);
+    team.setOverhearTask(False);
 
     for dtype in ['train', 'validation']:
         # get the entire batch
@@ -144,10 +145,10 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
     print('[%s][Iter: %d][Ep: %.2f][R2: %.4f][Tr2: %.2f Va2: %.2f]' % \
                                 (time, iterId, epoch, team.totalReward2,\
                                 accuracy2['train'], accuracy2['validation']))
-    trainAccHistory1.append(accuracy1['train']);
-    testAccHistory1.append(accuracy1['validation']);
-    trainAccHistory2.append(accuracy2['train']);
-    testAccHistory2.append(accuracy2['validation']);
+    trainAccHistory1.append(accuracy1['train'].data.item());
+    testAccHistory1.append(accuracy1['validation'].data.item());
+    trainAccHistory2.append(accuracy2['train'].data.item());
+    testAccHistory2.append(accuracy2['validation'].data.item());
 #------------------------------------------------------------------------
 print('[%s][Iter: %d][Ep: %.2f][R1: %.4f][Tr1: %.2f Va1: %.2f]' % \
 			(time, iterId, epoch, team.totalReward1,\
