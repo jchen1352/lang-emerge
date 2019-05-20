@@ -111,6 +111,8 @@ class Answerer(ChatBot):
         self.parent = super(Answerer, self);
         # input-output for current bot
         params['inVocabSize'] = params['aInVocab'];
+        if params['overhear']:
+            params['inVocabSize'] += params['qOutVocab'];
         params['outVocabSize'] = params['aOutVocab'];
         self.parent.__init__(params);
 
@@ -128,8 +130,8 @@ class Answerer(ChatBot):
 
         # set offset
         self.listenOffset = params['qOutVocab'];
-        self.overhearOffset = self.listenOffset + params['qOutVocab'];
-        self.noneToken = params['inVocabSize'] - 1;
+        self.noneToken = self.listenOffset + params['aOutVocab'];
+        self.overhearOffset = self.noneToken + 1;
 
     # Embedding the image
     def embedImage(self, batch):
@@ -147,6 +149,10 @@ class Questioner(ChatBot):
         self.parent = super(Questioner, self);
         # input-output for current bot
         params['inVocabSize'] = params['qInVocab'];
+        if params['overhear']:
+            params['inVocabSize'] += params['aOutVocab'];
+            if params['overhearTask']:
+                params['inVocabSize'] += params['numTasks'];
         params['outVocabSize'] = params['qOutVocab'];
         self.parent.__init__(params);
 
@@ -163,10 +169,13 @@ class Questioner(ChatBot):
         initializeWeights([self.predictNet, self.predictRNN, self.rnn], 'xavier');
 
         # setting offset
-        self.taskOffset = params['aOutVocab'] + params['qOutVocab'];
+        # aOut | qOut | tasks | none | noneTask | aOut | tasks
         self.listenOffset = params['aOutVocab'];
-        self.overhearOffset = self.taskOffset + params['numTasks'];
-        self.noneToken = params['inVocabSize'] - 1;
+        self.taskOffset = params['aOutVocab'] + params['qOutVocab'];
+        self.noneToken = self.taskOffset + params['numTasks'];
+        self.noneTaskToken = self.noneToken + 1;
+        self.overhearOffset = self.noneTaskToken + 1;
+        self.overhearTaskOffset = params['numTasks'] + 2 + params['aOutVocab'];
 
     # make a guess the given image
     def guessAttribute(self, inputEmbeds):
@@ -288,11 +297,11 @@ class Team:
             elif self.overhearTask and \
                     (aBot1Reply >= self.qBot1.taskOffset).data.all() and \
                     (aBot2Reply >= self.qBot2.taskOffset).data.all():
-                self.qBot1.listen(self.qBot1.overhearOffset + aBot2Reply);
-                self.qBot2.listen(self.qBot2.overhearOffset + aBot1Reply);
+                self.qBot1.listen(self.qBot1.overhearTaskOffset + aBot2Reply);
+                self.qBot2.listen(self.qBot2.overhearTaskOffset + aBot1Reply);
             else:
-                self.qBot1.listen(aBot2Reply.clone().fill_(self.qBot1.noneToken));
-                self.qBot2.listen(aBot1Reply.clone().fill_(self.qBot2.noneToken));
+                self.qBot1.listen(aBot2Reply.clone().fill_(self.qBot1.noneTaskToken));
+                self.qBot2.listen(aBot1Reply.clone().fill_(self.qBot2.noneTaskToken));
             qBot1Ques = self.qBot1.speak();
             qBot2Ques = self.qBot2.speak();
 

@@ -83,7 +83,7 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
                                                         params['negFraction']);
 
     # forward pass
-    # overhear according tocriptparam overhearFraction
+    # overhear according to param overhearFraction
     overhear = options['overhear'] and random.random() < options['overhearFraction'];
     team.setOverhear(overhear)
     overhearTask = options['overhearTask'] and overhear;
@@ -149,6 +149,12 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
     trainAccHistory2.append(accuracy2['train']);
     testAccHistory2.append(accuracy2['validation']);
 #------------------------------------------------------------------------
+print('[%s][Iter: %d][Ep: %.2f][R1: %.4f][Tr1: %.2f Va1: %.2f]' % \
+			(time, iterId, epoch, team.totalReward1,\
+			accuracy1['train'], accuracy1['validation']))
+print('[%s][Iter: %d][Ep: %.2f][R2: %.4f][Tr2: %.2f Va2: %.2f]' % \
+			(time, iterId, epoch, team.totalReward2,\
+			accuracy2['train'], accuracy2['validation']))
 # save final model with a time stamp
 timeStamp = strftime("%a-%d-%b-%Y-%X", gmtime());
 replaceWith = 'final_%s' % timeStamp;

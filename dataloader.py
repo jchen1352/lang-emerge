@@ -30,12 +30,9 @@ class Dataloader:
         # A, Q have different vocabs
         qOutVocab = [chr(ii + 97) for ii in xrange(params['qOutVocab'])];
         aOutVocab = [chr(ii + 65) for ii in xrange(params['aOutVocab'])];
-        aInVocab =  qOutVocab + aOutVocab;
-        qInVocab = aOutVocab + qOutVocab + taskVocab;
-        # Add overhear from other team to the InVocabs
-        # plus 1 symbol for no input from other team
-        aInVocab += qOutVocab + [' ']
-        qInVocab += aOutVocab + taskVocab + [' ']
+        # Add symbols for no overhearing
+        aInVocab =  qOutVocab + aOutVocab + [' '];
+        qInVocab = aOutVocab + qOutVocab + taskVocab + [' ', '  '];
 
         # pack parameters
         self.params = {'numTasks': self.numTasks, 'taskSelect': self.taskDefn,\
@@ -139,7 +136,7 @@ class Dataloader:
     # get a batch
     def getBatch(self, batchSize):
         # sample tasks
-        tasks = torch.LongTensor(batchSize).random_(0, self.numPairTasks-1);
+        tasks = torch.LongTensor(batchSize).random_(0, self.numPairTasks);
         # sample a batch
         indices = torch.LongTensor(batchSize).random_(0, self.numInst['train']-1);
         if self.useGPU: indices = indices.cuda();
@@ -157,7 +154,7 @@ class Dataloader:
     # get a batch
     def getBatchSpecial(self, batchSize, currentPred, negFraction=0.8):
         # sample tasks
-        tasks = torch.LongTensor(batchSize).random_(0, self.numPairTasks-1);
+        tasks = torch.LongTensor(batchSize).random_(0, self.numPairTasks);
         # sample a batch
         indices = torch.LongTensor(batchSize).random_(0, self.numInst['train']-1);
         if self.useGPU: indices = indices.cuda();

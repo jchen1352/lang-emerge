@@ -38,6 +38,7 @@ team = Team(params);
 team.loadModel(loaded);
 team.evaluate();
 team.setOverhear(False);
+team.setOverhearTask(False);
 #------------------------------------------------------------------------
 # test agents
 #------------------------------------------------------------------------
