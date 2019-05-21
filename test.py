@@ -78,13 +78,14 @@ for dtype in dtypes:
     talk1 = data.reformatTalk(talk1, preds1, images, tasks, labels);
     talk2 = data.reformatTalk(talk2, preds2, images, tasks, labels);
     if 'final' in loadPath:
-        savePath = loadPath.replace('final', 'chatlog-'+dtype);
+        savePath1 = loadPath.replace('final', 'chatlog1-'+dtype);
+        savePath2 = loadPath.replace('final', 'chatlog2-'+dtype);
     elif 'inter' in loadPath:
-        savePath = loadPath.replace('inter', 'chatlog-'+dtype);
-    savePath1 = savePath.replace('.pickle', '_1.json');
-    savePath2 = savePath.replace('.pickle', '_2.json');
-    print('Saving conversations: %s' % savePath)
-    with open(savePath1, 'w') as fileId:json.dump(talk1, fileId);
-    with open(savePath2, 'w') as fileId:json.dump(talk2, fileId);
-    saveResultPage(savePath1);
-    saveResultPage(savePath2);
+        savePath1 = loadPath.replace('inter', 'chatlog1-'+dtype);
+        savePath2 = loadPath.replace('inter', 'chatlog2-'+dtype);
+    savePath1 = savePath1.replace('.pickle', '.json');
+    savePath2 = savePath2.replace('.pickle', '.json');
+    #with open(savePath1, 'w') as fileId:json.dump(talk1, fileId);
+    #with open(savePath2, 'w') as fileId:json.dump(talk2, fileId);
+    #saveResultPage(savePath1);
+    #saveResultPage(savePath2);

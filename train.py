@@ -13,15 +13,16 @@ from dataloader import Dataloader
 import options
 from time import gmtime, strftime
 
-# random seed
-torch.manual_seed(0);
-random.seed(0);
-
 # read the command line options
 options = options.read();
 #------------------------------------------------------------------------
 # setup experiment and dataset
 #------------------------------------------------------------------------
+
+# random seed
+torch.manual_seed(options['seed']);
+random.seed(options['seed']);
+
 data = Dataloader(options);
 numInst = data.getInstCount();
 
@@ -125,16 +126,16 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
     if accuracy1['train'] == 100 or accuracy2['train'] == 100: break;
 
     # save for every 5k epochs
-    if iterId > 0 and iterId % (10000*numIterPerEpoch) == 0:
+    if iterId > 0 and iterId % (5000*numIterPerEpoch) == 0:
         team.saveModel(savePath, optimizer, params);
-        historySavePath = savePath.replace('inter', 'history')
+        historySavePath = savePath.replace('inter', 'history');
         with open(historySavePath, 'wb') as f:
             pickle.dump({
                     'train1': trainAccHistory1,
                     'valid1': testAccHistory1,
                     'train2': trainAccHistory2,
                     'valid2': testAccHistory2
-                }, f)
+                }, f);
 
     if iterId % 100 != 0: continue;
 

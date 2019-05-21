@@ -9,7 +9,7 @@ def read():
     parser = argparse.ArgumentParser(description='RL Train toy example');
 
     # Model parameters
-    parser.add_argument('-hiddenSize', default=50, type=int,\
+    parser.add_argument('-hiddenSize', default=100, type=int,\
                             help='Hidden Size for the language models');
     parser.add_argument('-embedSize', default=20, type=int,\
                             help='Embed size for words');
@@ -34,9 +34,9 @@ def read():
                             help='Turn on/off for teams to overhear each other');
     parser.add_argument('-overhearTask', dest='overhearTask', action='store_true',\
                             help='Turn on/off for teams to overhear tasks');
-    parser.add_argument('-rlPosMult', default=10, type=int,\
+    parser.add_argument('-rlPosMult', default=2, type=int,\
                             help='Positive multiplier in reward matrix');
-    parser.add_argument('-rlNegMult', default=10, type=int,\
+    parser.add_argument('-rlNegMult', default=50, type=int,\
                             help='Negative multiplier in reward matrix');
     parser.add_argument('-overhearFraction', default=0.5, type=float,\
                             help='Percentage of time to overhear');
@@ -46,9 +46,11 @@ def read():
                             help='Batch size -- number of episodes')
     parser.add_argument('-numEpochs', default=1000000, type=int,\
                             help='Maximum number of epochs to run')
-    parser.add_argument('-learningRate', default=1e-3, type=float,\
+    parser.add_argument('-learningRate', default=0.01, type=float,\
                             help='Initial learning rate')
     parser.add_argument('-useGPU', dest='useGPU', action='store_true')
+    parser.add_argument('-seed', default=0, type=int,\
+                            help='Random Seed')
 
     try: parsed = vars(parser.parse_args());
     except IOError, msg: parser.error(str(msg));
