@@ -138,7 +138,7 @@ class Dataloader:
         # sample tasks
         tasks = torch.LongTensor(batchSize).random_(0, self.numPairTasks);
         # sample a batch
-        indices = torch.LongTensor(batchSize).random_(0, self.numInst['train']-1);
+        indices = torch.LongTensor(batchSize).random_(0, self.numInst['train']);
         if self.useGPU: indices = indices.cuda();
         batch = self.data['train'][indices];
 
@@ -156,7 +156,7 @@ class Dataloader:
         # sample tasks
         tasks = torch.LongTensor(batchSize).random_(0, self.numPairTasks);
         # sample a batch
-        indices = torch.LongTensor(batchSize).random_(0, self.numInst['train']-1);
+        indices = torch.LongTensor(batchSize).random_(0, self.numInst['train']);
         if self.useGPU: indices = indices.cuda();
         #-------------------------------------------------------------
         # fill the first batchSize/2 based on previously misclassified examples
@@ -165,7 +165,7 @@ class Dataloader:
         negBatchSize = int(batchSize * negFraction);
         # sample from this
         negSamples = torch.LongTensor(negBatchSize).fill_(0);
-        if negInds.size(0) > 1: negSamples.random_(0, negInds.size(0)-1);
+        if negInds.size(0) > 1: negSamples.random_(0, negInds.size(0));
         if self.useGPU: negSamples = negSamples.cuda();
         negInds = negInds[negSamples];
         indices[:negBatchSize] = negInds;
