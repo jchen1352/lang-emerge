@@ -12,17 +12,16 @@ from chatbots import Team
 from dataloader import Dataloader
 import options
 from time import gmtime, strftime
-#import matplotlib.pyplot as plt
-
-# random seed
-torch.manual_seed(0);
-random.seed(0);
 
 # read the command line options
 options = options.read();
 #------------------------------------------------------------------------
 # setup experiment and dataset
 #------------------------------------------------------------------------
+
+# random seed
+torch.manual_seed(options['seed']);
+
 data = Dataloader(options);
 numInst = data.getInstCount();
 
@@ -82,7 +81,7 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
         # get the entire batch
         img, task, labels = data.getCompleteData(dtype);
         # evaluate on the train dataset, using greedy policy
-        guess, _, _ = team.forward(Variable(img), Variable(task));
+        guess, _, _, _ = team.forward(Variable(img), Variable(task));
         # compute accuracy for color, shape, and both
         firstMatch = guess[0].data == labels[:, 0].long();
         secondMatch = guess[1].data == labels[:, 1].long();
@@ -102,7 +101,7 @@ for iterId in xrange(params['numEpochs'] * numIterPerEpoch):
         with open(historySavePath, 'wb') as f:
             pickle.dump([trainAccHistory, testAccHistory], f)
 
-    if iterId % 100 != 0: continue;
+    if iterId % 1000 != 0: continue;
 
     time = strftime("%a, %d %b %Y %X", gmtime());
     print('[%s][Iter: %d][Ep: %.2f][R: %.4f][Tr: %.2f Te: %.2f]' % \
@@ -118,13 +117,6 @@ finalSavePath = savePath.replace('inter', replaceWith);
 print('Saving : ' + finalSavePath)
 team.saveModel(finalSavePath, optimizer, params);
 #------------------------------------------------------------------------
-# Plot train and test accuracy over epochs
-#plt.plot(trainAccHistory);
-#plt.plot(testAccHistory);
-#plt.title('Accuracy vs Epochs');
-#plt.xlabel('Epochs (x100)');
-#plt.ylabel('Accuracy (%)');
-#plt.show();
 historySavePath = finalSavePath.replace('final', 'history')
 with open(historySavePath, 'wb') as f:
     pickle.dump([trainAccHistory, testAccHistory], f)

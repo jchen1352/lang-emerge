@@ -248,6 +248,7 @@ class Team:
         aBotReply = tasks + self.qBot.taskOffset;
         # if the conversation is to be recorded
         talk = [];
+        talk_list = [];
         for roundId in xrange(self.numRounds):
             # listen to answer, ask q_r, and listen to q_r as well
             self.qBot.listen(aBotReply);
@@ -266,7 +267,9 @@ class Team:
             aBotReply = aBotReply.detach();
             self.aBot.listen(aBotReply + self.aBot.listenOffset, imgEmbed);
 
-            if record: talk.extend([qBotQues, aBotReply]);
+            if record:
+                talk.extend([qBotQues, aBotReply]);
+                talk_list.append([qBotQues, aBotReply]);
 
         # listen to the last answer
         self.qBot.listen(aBotReply);
@@ -274,7 +277,7 @@ class Team:
         # predict the image attributes, compute reward
         self.guessToken, self.guessDistr = self.qBot.predict(tasks, 2);
 
-        return self.guessToken, self.guessDistr, talk;
+        return self.guessToken, self.guessDistr, talk, talk_list;
 
     # backward pass
     def backward(self, optimizer, gtLabels, epoch, baseline=None):
